@@ -13,5 +13,5 @@ wheels/
 
 .sqlite3
 
-.idea/
-.vscode/
+.idea/*
+.vscode/*
