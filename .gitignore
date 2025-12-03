@@ -11,7 +11,7 @@ wheels/
 
 .DS_Store
 
-.sqlite3
+*.sqlite3
 
 .idea/*
 .vscode/*
