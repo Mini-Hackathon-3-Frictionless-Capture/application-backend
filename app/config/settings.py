@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "apps.accounts.apps.AccountsConfig",
     "apps.threads.apps.ThreadsConfig",
     "apps.notes.apps.NotesConfig",
+    "apps.tasks.apps.TasksConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

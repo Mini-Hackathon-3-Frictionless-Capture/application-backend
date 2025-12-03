@@ -1,3 +1,5 @@
+import random
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from faker import Faker
@@ -27,11 +29,25 @@ def tmp_generate_classification(instance: models.ThreadMessage, created: bool, *
         return
 
     from apps.notes.models import Note  # noqa
+    from apps.tasks.models import Task  # noqa
 
-    Note.objects.create(
-        title=fake.sentence(nb_words=6, variable_nb_words=True).rstrip("."),
-        content=fake.text(),
-        owner=instance.thread.owner,
-        thread=instance.thread,
-        meta_data={},
-    )
+    possible_actions = ["note", "task"]
+
+    choice = random.choice(possible_actions)
+
+    if choice == "note":
+        Note.objects.create(
+            title=fake.sentence(nb_words=6, variable_nb_words=True).rstrip("."),
+            content=fake.text(),
+            owner=instance.thread.owner,
+            thread=instance.thread,
+            meta_data={},
+        )
+    else:
+        Task.objects.create(
+            title=fake.sentence(nb_words=6, variable_nb_words=True).rstrip("."),
+            content=fake.text(),
+            owner=instance.thread.owner,
+            thread=instance.thread,
+            meta_data={},
+        )
