@@ -1,0 +1,31 @@
+[project]
+name = "application-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "django>=6.0",
+    "djangorestframework>=3.16.1",
+]
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.2",
+    "mypy>=1.19.0",
+    "pre-commit>=4.5.0",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+explicit_package_bases = true
+namespace_packages = true
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# I: sort imports
+# E: lintings (pep8)
+# F: fixable issues (pyflakes)
+select = ["E", "F", "I"]
