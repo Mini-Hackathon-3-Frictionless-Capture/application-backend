@@ -1,5 +1,18 @@
-from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
+
+User = get_user_model()
+
+
+class ThreadManager(models.Manager):
+    def create_thread(self, *, content: str, **kwargs):
+        thread = super().create(**kwargs)
+        ThreadMessage.objects.create_text_message(
+            thread=thread,
+            content=content,
+            author=thread.owner,
+        )
+        return thread
 
 
 class Thread(models.Model):
@@ -10,10 +23,18 @@ class Thread(models.Model):
         auto_now_add=True,
     )
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        User,
         on_delete=models.CASCADE,
         related_name="threads",
     )
+
+    objects = ThreadManager()
+
+
+class ThreadMessageManager(models.Manager):
+    def create_text_message(self, **kwargs) -> ThreadMessage:
+        message = ThreadMessage.objects.create(message_type="text", **kwargs)
+        return message
 
 
 class ThreadMessage(models.Model):
@@ -35,7 +56,7 @@ class ThreadMessage(models.Model):
         default=False,
     )
     author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        User,
         on_delete=models.CASCADE,
         related_name="thread_messages",
         null=True,
@@ -49,6 +70,8 @@ class ThreadMessage(models.Model):
         default="text",
         max_length=20,
     )
+
+    objects = ThreadMessageManager()
 
 
 class ThreadMessageImageAttachment(models.Model):

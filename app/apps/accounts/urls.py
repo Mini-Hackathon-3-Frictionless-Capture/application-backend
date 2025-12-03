@@ -5,5 +5,9 @@ from . import api
 
 urlpatterns = [
     path("auth/token", obtain_auth_token),
-    path("me", api.MeAPIView.as_view(), name="accounts__me"),
+    path(
+        "me",
+        api.MeAPIView.as_view(),
+        name="accounts__me",
+    ),
 ]
