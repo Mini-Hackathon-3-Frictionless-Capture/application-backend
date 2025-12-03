@@ -3,6 +3,9 @@ from django.db import models
 
 
 class Thread(models.Model):
+    class Meta:
+        ordering = ["-timestamp"]
+
     timestamp = models.DateTimeField(
         auto_now_add=True,
     )
@@ -12,11 +15,11 @@ class Thread(models.Model):
         related_name="threads",
     )
 
+
+class ThreadMessage(models.Model):
     class Meta:
         ordering = ["-timestamp"]
 
-
-class ThreadMessage(models.Model):
     thread = models.ForeignKey(
         Thread,
         on_delete=models.CASCADE,
@@ -37,9 +40,15 @@ class ThreadMessage(models.Model):
         related_name="thread_messages",
         null=True,
     )
-
-    class Meta:
-        ordering = ["-timestamp"]
+    message_type = models.CharField(
+        choices=[
+            ("text", "text"),
+            ("image", "image"),
+            ("audio", "audio"),
+        ],
+        default="text",
+        max_length=20,
+    )
 
 
 class ThreadMessageImageAttachment(models.Model):
