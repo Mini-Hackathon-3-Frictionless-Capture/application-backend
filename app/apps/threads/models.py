@@ -11,6 +11,7 @@ class ThreadManager(models.Manager):
             thread=thread,
             content=content,
             author=thread.owner,
+            is_initial_thread_message=True,
         )
         return thread
 
@@ -69,6 +70,9 @@ class ThreadMessage(models.Model):
         ],
         default="text",
         max_length=20,
+    )
+    is_initial_thread_message = models.BooleanField(
+        default=False,
     )
 
     objects = ThreadMessageManager()
