@@ -7,7 +7,6 @@ services:
     container_name: frictionless-application-backend-django
     environment:
       - ALLOWED_HOSTS=https://www.frictionless-capture.com https://frictionless-capture.com
-      - DEBUG=false
       - CSRF_TRUSTED_ORIGINS=https://www.frictionless-capture.com https://frictionless-capture.com
     volumes:
       - ./app:/app
