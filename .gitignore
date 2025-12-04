@@ -18,3 +18,5 @@ wheels/
 
 app/static/*
 app/media/*
+
+certbot/*
