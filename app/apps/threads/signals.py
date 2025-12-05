@@ -2,6 +2,7 @@ import random
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.timezone import now
 from faker import Faker
 
 from . import models
@@ -24,30 +25,68 @@ def create_initial_system_prompt(instance: models.ThreadMessage, created: bool, 
 
 
 @receiver(post_save, sender=models.ThreadMessage)
-def tmp_generate_classification(instance: models.ThreadMessage, created: bool, **kwargs):
+def generate_classification(instance: models.ThreadMessage, created: bool, **kwargs):
     if not created or not instance.is_initial_thread_message:
         return
 
-    from apps.notes.models import Note  # noqa
-    from apps.tasks.models import Task  # noqa
-
-    possible_actions = ["note", "task"]
-
-    choice = random.choice(possible_actions)
-
-    if choice == "note":
-        Note.objects.create(
-            title=fake.sentence(nb_words=6, variable_nb_words=True).rstrip("."),
-            content=fake.text(),
-            owner=instance.thread.owner,
+    today = now().date()
+    usage = instance.thread.owner.usage.filter(date=today)
+    if not usage.exists():
+        models.ThreadMessage.objects.create_text_message(
+            content=(
+                "Leider ist dein Account nicht für die Nutzung dieser Anwendung freigeschaltet. "
+                "Bitte wende dich an einen Administrator."
+            ),
+            is_bot_message=True,
             thread=instance.thread,
-            meta_data={},
         )
+        return
+
+    usage = usage.first()
+
+    if usage.use_fake_data:
+        from apps.notes.models import Note  # noqa
+        from apps.tasks.models import Task  # noqa
+
+        possible_actions = ["note", "task"]
+
+        choice = random.choice(possible_actions)
+
+        if choice == "note":
+            Note.objects.create(
+                title=fake.sentence(nb_words=6, variable_nb_words=True).rstrip("."),
+                content=fake.text(),
+                owner=instance.thread.owner,
+                thread=instance.thread,
+                meta_data={},
+            )
+        else:
+            Task.objects.create(
+                title=fake.sentence(nb_words=6, variable_nb_words=True).rstrip("."),
+                content=fake.text(),
+                owner=instance.thread.owner,
+                thread=instance.thread,
+                meta_data={},
+            )
+
+    elif usage.max_usage < usage.current_usage:
+        models.ThreadMessage.objects.create_text_message(
+            content=(
+                "Leider sind deine Credits für diesen Monat bereits aufgebraucht. Bitte warte auf "
+                "den kommenden Monat oder wende dich an einen Administrator."
+            ),
+            is_bot_message=True,
+            thread=instance.thread,
+        )
+        return
+
     else:
-        Task.objects.create(
-            title=fake.sentence(nb_words=6, variable_nb_words=True).rstrip("."),
-            content=fake.text(),
-            owner=instance.thread.owner,
+        models.ThreadMessage.objects.create_text_message(
+            content=(
+                "Aktuell ist die Verwendung eines echten LLMs noch nicht supported. Kommt aber "
+                "jeden Augenblick."
+            ),
+            is_bot_message=True,
             thread=instance.thread,
-            meta_data={},
         )
+        return
