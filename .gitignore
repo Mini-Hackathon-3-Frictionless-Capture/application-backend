@@ -22,4 +22,6 @@ app/media/*
 certbot/*
 
 .env.airflow
+.env
+
 airflow/logs/*

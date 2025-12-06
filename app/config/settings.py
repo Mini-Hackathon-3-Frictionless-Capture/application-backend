@@ -113,3 +113,10 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static"
+
+
+AIRFLOW = {
+    "host": os.getenv("AIRFLOW_HOST", "http://localhost:8080"),
+    "username": os.getenv("AIRFLOW_USERNAME", "airflow"),
+    "password": os.getenv("AIRFLOW_PASSWORD", "airflow"),
+}

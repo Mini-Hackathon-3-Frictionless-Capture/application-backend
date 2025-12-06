@@ -1,5 +1,7 @@
 import random
 
+import requests
+from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.timezone import now
@@ -8,6 +10,18 @@ from faker import Faker
 from . import models
 
 fake = Faker(["de_DE"])
+
+
+def get_airflow_jwt_token() -> str:
+    response = requests.post(
+        url=f"{settings.AIRFLOW['host']}/auth/token",
+        json={
+            "username": settings.AIRFLOW["username"],
+            "password": settings.AIRFLOW["password"],
+        },
+    )
+    response.raise_for_status()
+    return response.json()["access_token"]
 
 
 @receiver(post_save, sender=models.ThreadMessage)
@@ -30,7 +44,11 @@ def generate_classification(instance: models.ThreadMessage, created: bool, **kwa
         return
 
     today = now().date()
-    usage = instance.thread.owner.usage.filter(date=today)
+    filter_ = {
+        "date__year": today.year,
+        "date__month": today.month,
+    }
+    usage = instance.thread.owner.usage.filter(**filter_)
     if not usage.exists():
         models.ThreadMessage.objects.create_text_message(
             content=(
@@ -81,12 +99,38 @@ def generate_classification(instance: models.ThreadMessage, created: bool, **kwa
         return
 
     else:
-        models.ThreadMessage.objects.create_text_message(
-            content=(
-                "Aktuell ist die Verwendung eines echten LLMs noch nicht supported. Kommt aber "
-                "jeden Augenblick."
-            ),
-            is_bot_message=True,
-            thread=instance.thread,
-        )
-        return
+        try:
+            access_token = get_airflow_jwt_token()
+            response = requests.post(
+                url=f"{settings.AIRFLOW['host']}/api/v2/dags/automation/dagRuns",
+                json={
+                    "logical_date": now().isoformat(),
+                    "conf": {
+                        "payload": {
+                            "user_id": instance.thread.owner.id,
+                            "thread_id": instance.thread.id,
+                            "thread_message_id": instance.id,
+                        },
+                    },
+                },
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                },
+            )
+            response.raise_for_status()
+            models.ThreadMessage.objects.create_text_message(
+                content=(
+                    "Deine Nachricht wurde jetzt an die KI zur Verarbeitung gegeben. "
+                    "Das entwicklerteam war faul und hat keine Websockets implementiert. "
+                    "Bitte lade diese Seite alle par Sekunden neu um Up2Date zu bleiben <3."
+                ),
+                is_bot_message=True,
+                thread=instance.thread,
+            )
+
+        except requests.exceptions.HTTPError:
+            models.ThreadMessage.objects.create_text_message(
+                content=("Huch! Das Entwicklerteam war inkompetent! Da ist was schief gegangen."),
+                is_bot_message=True,
+                thread=instance.thread,
+            )
