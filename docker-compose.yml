@@ -5,9 +5,12 @@ services:
   application-backend:
     build: .
     container_name: frictionless-application-backend-django
+    env_file:
+      - ${ENV_FILE_PATH:-.env}
     environment:
       - ALLOWED_HOSTS=www.frictionless-capture.com frictionless-capture.com
       - CSRF_TRUSTED_ORIGINS=https://www.frictionless-capture.com https://frictionless-capture.com
+      - AIRFLOW_HOST=http://airflow-apiserver:8080
     volumes:
       - ./app:/app
       - staticfiles:/app/static

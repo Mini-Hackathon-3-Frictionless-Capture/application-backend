@@ -115,8 +115,15 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static"
 
 
+_airflow_username = os.getenv("_AIRFLOW_WWW_USER_USERNAME") or os.getenv(
+    "AIRFLOW_USERNAME", "airflow"
+)
+_aiflow_password = os.getenv("_AIRFLOW_WWW_USER_PASSWORD") or os.getenv(
+    "AIRFLOW_USERNAME", "airflow"
+)
+
 AIRFLOW = {
     "host": os.getenv("AIRFLOW_HOST", "http://localhost:8080"),
-    "username": os.getenv("AIRFLOW_USERNAME", "airflow"),
-    "password": os.getenv("AIRFLOW_PASSWORD", "airflow"),
+    "username": _airflow_username,
+    "password": _aiflow_password,
 }
